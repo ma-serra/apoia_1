@@ -294,3 +294,23 @@ export type SelectableItem = { id: string, name: string }
 export type PromptByKind = {
     id: number, testset_id: number, model_id: number, kind: string, name: string, slug: string, content: any, created_by: number, created_at: Date, is_official: boolean, testset_slug: string, testset_name: string, model_name: string, user_username: string, score: number
 }
+
+export type IANotification = {
+    id: number
+    user_id: number
+    title: string
+    message: string
+    type: string
+    link: string | null
+    is_read: boolean | number
+    created_at: Date
+    read_at: Date | null
+}
+
+export type IANotificationToInsert = {
+    user_id: number
+    title: string
+    message: string
+    type?: string
+    link?: string | null
+}

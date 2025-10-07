@@ -18,6 +18,8 @@ Clique [aqui](https://docs.google.com/presentation/d/1XTmGNOI3O3yaBOEXa5A3ViVHlC
 
 **Interface com  o Usuário**: Informação do número do processo, apresentação dos resultados em tempo real, processamento de relatórios.
 
+**Sistema de Notificações**: Notificações em tempo real para usuários sobre conclusão de análises, atualizações do sistema e alertas importantes. [Documentação](docs/NOTIFICATIONS.md)
+
 ## Arquitetura
 - Nodejs 20 LTS
 - Desenvolvido em TypeScript, NextJS e Vercel AI SDK

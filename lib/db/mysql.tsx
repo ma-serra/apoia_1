@@ -826,5 +826,81 @@ export class Dao {
         return getId(result)
     }
 
+    // Notification methods
+    static async createNotification(data: mysqlTypes.IANotificationToInsert): Promise<mysqlTypes.IANotification | undefined> {
+        if (!knex) return
+        const { user_id, title, message, type = 'info', link = null } = data
+        const [inserted] = await knex('ia_notification').insert({
+            user_id,
+            title,
+            message,
+            type,
+            link,
+            is_read: 0
+        }).returning('id')
+        
+        const result = await knex('ia_notification')
+            .select<mysqlTypes.IANotification>('*')
+            .where('id', getId(inserted))
+            .first()
+        return result
+    }
+
+    static async retrieveNotificationsByUserId(user_id: number, unreadOnly: boolean = false, limit: number = 50): Promise<mysqlTypes.IANotification[]> {
+        if (!knex) return []
+        let query = knex('ia_notification')
+            .select<mysqlTypes.IANotification[]>('*')
+            .where({ user_id })
+        
+        if (unreadOnly) {
+            query = query.where({ is_read: 0 })
+        }
+        
+        const result = await query
+            .orderBy('created_at', 'desc')
+            .limit(limit)
+        return result
+    }
+
+    static async markNotificationAsRead(id: number, user_id: number): Promise<boolean> {
+        if (!knex) return false
+        const updated = await knex('ia_notification')
+            .update({
+                is_read: 1,
+                read_at: knex.fn.now()
+            })
+            .where({ id, user_id })
+        return updated > 0
+    }
+
+    static async markAllNotificationsAsRead(user_id: number): Promise<number> {
+        if (!knex) return 0
+        const updated = await knex('ia_notification')
+            .update({
+                is_read: 1,
+                read_at: knex.fn.now()
+            })
+            .where({ user_id, is_read: 0 })
+        return updated
+    }
+
+    static async deleteNotification(id: number, user_id: number): Promise<boolean> {
+        if (!knex) return false
+        const deleted = await knex('ia_notification')
+            .delete()
+            .where({ id, user_id })
+        return deleted > 0
+    }
+
+    static async getUnreadNotificationCount(user_id: number): Promise<number> {
+        if (!knex) return 0
+        const result = await knex('ia_notification')
+            .count('* as count')
+            .where({ user_id, is_read: 0 })
+            .first()
+        return result?.count ? Number(result.count) : 0
+    }
+
 }
+
 

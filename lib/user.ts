@@ -15,8 +15,13 @@ export const getCurrentUser = async (): Promise<UserType | undefined> => {
     const headersList = headers()
     const authorization = headersList.get("authorization")
     if (authorization) {
-        const claims = await verifyJweToken(authorization)
-        return { name: claims.name, email: claims.name, image: { password: claims.password, system: claims.system } }
+        try {
+            const claims = await verifyJweToken(authorization)
+            return { name: claims.name, email: claims.name, image: { password: claims.password, system: claims.system } }
+        } catch (error) {
+            // Token verification failed, fall through to session-based authentication
+            console.error('Authorization header verification failed:', error instanceof Error ? error.message : 'Unknown error')
+        }
     }
 
     const session = await getServerSession(authOptions)

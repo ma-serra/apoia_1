@@ -45,18 +45,34 @@ export const buildJweToken = async (claims: any) => {
 interface TokenClaims { name: string, password: string, system: string }
 
 export const verifyJweToken = async (token: string): Promise<TokenClaims> => {
-  const secret = await sha256(envString('JWT_SECRET') as string)
-  const jwtsecret = new TextEncoder().encode(envString('JWT_SECRET'))
+  try {
+    // Validate input
+    if (!token || typeof token !== 'string') {
+      throw new Error('Invalid token format')
+    }
 
-  // jwe is token without the "Bearer " prefix
-  const jwe = token.replace('Bearer ', '')
+    const secret = await sha256(envString('JWT_SECRET') as string)
+    const jwtsecret = new TextEncoder().encode(envString('JWT_SECRET'))
 
-  const { plaintext: jwt } = await jose.compactDecrypt(jwe, secret)
+    // jwe is token without the "Bearer " prefix
+    const jwe = token.replace('Bearer ', '').trim()
 
-  const { payload, protectedHeader } = await jose.jwtVerify(jwt, jwtsecret, {
-    issuer: envString('JWT_ISSUER') as string,
-    audience: envString('JWT_AUDIENCE') as string,
-  })
+    // Validate that we have a token after removing the Bearer prefix
+    if (!jwe) {
+      throw new Error('Invalid token format')
+    }
 
-  return payload as unknown as TokenClaims
+    const { plaintext: jwt } = await jose.compactDecrypt(jwe, secret)
+
+    const { payload, protectedHeader } = await jose.jwtVerify(jwt, jwtsecret, {
+      issuer: envString('JWT_ISSUER') as string,
+      audience: envString('JWT_AUDIENCE') as string,
+    })
+
+    return payload as unknown as TokenClaims
+  } catch (error) {
+    // Log the error for debugging but don't expose details to the caller
+    console.error('Token verification failed:', error instanceof Error ? error.message : 'Unknown error')
+    throw new Error('Invalid or expired token')
+  }
 }
